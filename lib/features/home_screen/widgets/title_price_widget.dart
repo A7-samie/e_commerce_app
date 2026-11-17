@@ -1,0 +1,71 @@
+import 'package:e_commerce_app/core/styling/app_styles.dart';
+// ignore: unused_import
+import 'package:e_commerce_app/features/cart/models/cart_model.dart';
+import 'package:material_ui/material_ui.dart';
+
+import 'package:flutter_screenutil/flutter_screenutil.dart';
+
+class TitlePriceWidget extends StatelessWidget {
+  final String title;
+  final String price;
+
+  const TitlePriceWidget({super.key, required this.title, required this.price});
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: EdgeInsets.only(bottom: 16.h),
+      child: Row(
+        children: [
+          Text(
+            title,
+            style: AppStyles.black18BoldStyle.copyWith(
+              fontWeight: FontWeight.bold,
+              fontSize: 15.sp,
+              color: Colors.grey,
+            ),
+          ),
+          const Spacer(),
+          Text(
+            price,
+            style: AppStyles.black15BoldStyle.copyWith(
+              fontWeight: FontWeight.bold,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class TotalPriceWidget extends StatelessWidget {
+  final String title;
+  final String price;
+  const TotalPriceWidget({super.key, required this.title, required this.price});
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: EdgeInsets.only(bottom: 16.h),
+      child: Row(
+        children: [
+          Text(
+            title,
+            style: AppStyles.black15BoldStyle.copyWith(
+              fontWeight: FontWeight.bold,
+            ),
+          ),
+          const Spacer(),
+          Text(
+            price,
+            style: AppStyles.black18BoldStyle.copyWith(
+              fontWeight: FontWeight.bold,
+              fontSize: 15.sp,
+              color: Colors.grey,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}

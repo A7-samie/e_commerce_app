@@ -1,0 +1,286 @@
+// ignore_for_file: unused_import
+
+import 'package:e_commerce_app/core/routing/app_routes.dart';
+import 'package:e_commerce_app/core/styling/app_colors.dart';
+import 'package:e_commerce_app/core/styling/app_styles.dart';
+import 'package:e_commerce_app/core/utils/service_locator.dart';
+import 'package:e_commerce_app/core/utils/storage_helper.dart';
+import 'package:e_commerce_app/core/widgets/custom_text_field.dart';
+import 'package:e_commerce_app/core/widgets/loding_widgwt.dart';
+import 'package:e_commerce_app/core/widgets/spacing_widgets.dart';
+import 'package:e_commerce_app/features/home_screen/Cubit/categories_cubit.dart';
+import 'package:e_commerce_app/features/home_screen/Cubit/categories_state.dart';
+import 'package:e_commerce_app/features/home_screen/Cubit/prodacts_cubit.dart';
+import 'package:e_commerce_app/features/home_screen/Cubit/prodacts_state.dart';
+import 'package:e_commerce_app/features/home_screen/model/Prodacts_model.dart';
+import 'package:e_commerce_app/features/home_screen/widgets/category_item_widget.dart';
+import 'package:e_commerce_app/features/home_screen/widgets/product_item_widget.dart';
+import 'package:material_ui/material_ui.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:flutter_screenutil/flutter_screenutil.dart';
+import 'package:flutter_staggered_animations/flutter_staggered_animations.dart';
+import 'package:go_router/go_router.dart';
+import 'package:shimmer/shimmer.dart';
+
+class HomeScreen extends StatefulWidget {
+  const HomeScreen({super.key});
+
+  @override
+  State<HomeScreen> createState() => _HomeScreenState();
+}
+
+class _HomeScreenState extends State<HomeScreen> {
+  // ignore: non_constant_identifier_names
+  String SelectedCat = 'ALL';
+  @override
+  void initState() {
+    context.read<ProdactsCubit>().fetchProdacts();
+    context.read<CategoriesCubit>().fetchCategories();
+
+    super.initState();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    // عشان احذف التوكن
+    // sl<StorageHelper>().removeToken();
+    return Padding(
+      padding: EdgeInsets.symmetric(horizontal: 18.w),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const HeightSpace(28),
+          SizedBox(
+            width: 335.w,
+            child: Text("Discover", style: AppStyles.primaryHeadLinesStyle),
+          ),
+          const HeightSpace(16),
+          Row(
+            children: [
+              CustomTextField(width: 270.w, hintText: "Search For Clothes"),
+              const WidthSpace(8),
+              Container(
+                width: 56.w,
+                height: 56.h,
+                decoration: BoxDecoration(
+                  color: AppColors.primaryColor,
+                  borderRadius: BorderRadius.circular(8.r),
+                ),
+                child: Icon(Icons.search, color: Colors.white),
+              ),
+            ],
+          ),
+          const HeightSpace(16),
+
+          BlocBuilder<CategoriesCubit, CategoriesState>(
+            builder: (context, state) {
+              if (state is CategoriesLodedState) {
+                return SingleChildScrollView(
+                  scrollDirection: Axis.horizontal,
+                  child: Row(
+                    children: state.categories.map((cat) {
+                      return CategoryItemWidget(
+                        categoryName: cat,
+                        IsSelected: SelectedCat == cat ? true : false,
+                        ontap: () {
+                          setState(() {
+                            SelectedCat = cat;
+                            if (SelectedCat == "ALL") {
+                              context.read<ProdactsCubit>().fetchProdacts();
+                            } else {
+                              context
+                                  .read<ProdactsCubit>()
+                                  .fetchProdactsCategories(cat);
+                            }
+                          });
+                        },
+                      );
+                    }).toList(),
+                  ),
+                );
+              }
+              return SizedBox.shrink();
+            },
+          ),
+          const HeightSpace(16),
+          BlocBuilder<ProdactsCubit, ProdactsState>(
+            builder: (context, state) {
+              if (state is ProdactsLodingState) {
+                return Expanded(
+                  child: GridView.builder(
+                    physics: const NeverScrollableScrollPhysics(), // أو BouncingScrollPhysics حسب رغبتك
+                    shrinkWrap: true,
+                    itemCount:
+                        6, // عدد العناصر الوهمية اللي هتظهر أثناء التحميل
+                    gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+                      crossAxisCount: 2,
+                      mainAxisSpacing: 16.sp,
+                      crossAxisSpacing: 16.sp,
+                      childAspectRatio: 0.8,
+                    ),
+                    itemBuilder: (context, index) {
+                      return Shimmer.fromColors(
+                        baseColor: Colors.grey[300]!,
+                        highlightColor: Colors.grey[100]!,
+                        child: Container(
+                          decoration: BoxDecoration(
+                            color: Colors.white,
+                            borderRadius: BorderRadius.circular(
+                              16.r,
+                            ), // نفس تقفيلة كارت المنتج الحقيقي
+                          ),
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              // مكان الصورة
+                              Expanded(
+                                flex: 3,
+                                child: Container(
+                                  width: 150.w,
+                                  height: 150.h,
+                                  decoration: BoxDecoration(
+                                    color: Colors.white,
+                                    borderRadius: BorderRadius.vertical(
+                                      top: Radius.circular(16.r),
+                                    ),
+                                  ),
+                                ),
+                              ),
+                              Expanded(
+                                flex: 2,
+                                child: Padding(
+                                  padding: EdgeInsets.all(12.w),
+                                  child: Column(
+                                    crossAxisAlignment:
+                                        CrossAxisAlignment.start,
+                                    mainAxisAlignment:
+                                        MainAxisAlignment.spaceAround,
+                                    children: [
+                                      // مكان العنوان الأول
+                                      Container(
+                                        width: double.infinity,
+                                        height: 12.h,
+                                        color: Colors.white,
+                                      ),
+                                      // مكان العنوان التاني أو السطر القصير
+                                      Container(
+                                        width: 80.w,
+                                        height: 12.h,
+                                        color: Colors.white,
+                                      ),
+                                      // مكان السعر والزرار
+                                      Row(
+                                        mainAxisAlignment:
+                                            MainAxisAlignment.spaceBetween,
+                                        children: [
+                                          Container(
+                                            width: 50.w,
+                                            height: 14.h,
+                                            color: Colors.white,
+                                          ),
+                                          Container(
+                                            width: 30.w,
+                                            height: 30.h,
+                                            decoration: const BoxDecoration(
+                                              color: Colors.white,
+                                              shape: BoxShape.circle,
+                                            ),
+                                          ),
+                                        ],
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      );
+                    },
+                  ),
+                );
+              }
+              if (state is ProdactsLodedState) {
+                List<ProdactsModel> products = state.products;
+                return Expanded(
+                  child: RefreshIndicator(
+                    color: AppColors.primaryColor,
+                    backgroundColor: Colors.white,
+                    onRefresh: () async {
+                      SelectedCat = "ALL";
+                      setState(() {});
+                      context.read<ProdactsCubit>().fetchProdacts();
+                    },
+                    child: AnimationLimiter(
+                      child: GridView(
+                        physics: BouncingScrollPhysics(),
+                        gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+                          crossAxisCount: 2,
+                          mainAxisSpacing: 16.sp,
+                          crossAxisSpacing: 16.sp,
+                          childAspectRatio: 0.8,
+                        ),
+                        children: products.asMap().entries.map((entry) {
+                          final int index =
+                              entry.key; // جبنا الـ index هنا بكل سهولة
+                          final product = entry.value; // العنصر نفسه
+
+                          return AnimationConfiguration.staggeredList(
+                            position: index,
+                            duration: const Duration(milliseconds: 700),
+
+                            child: SlideAnimation(
+                              verticalOffset: 50,
+
+                              child: FadeInAnimation(
+                                child: ProductItemWidget(
+                                  src: product.images,
+                                  title: product.title ?? "",
+                                  price: product.price.toString(),
+                                  onTap: () {
+                                    // هنا هيبعت المنتج الخاص بالاندكس ده لوحده
+                                    GoRouter.of(context).pushNamed(
+                                      AppRoutes.productScreen,
+                                      extra: products[index],
+                                    );
+                                  },
+                                ),
+                              ),
+                            ),
+                          );
+                        }).toList(),
+                      ),
+                    ),
+                    //  GridView(
+
+                    //   physics: BouncingScrollPhysics(),
+                    //   gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+
+                    //     crossAxisCount: 2,
+                    //     mainAxisSpacing: 16.sp,
+                    //     crossAxisSpacing: 16.sp,
+                    //     childAspectRatio: 0.8,
+                    //   ),
+                    //   children:products.map((prodact){
+                    //     return  ProductItemWidget(
+                    //       src:prodact.images,
+                    //       title:prodact.title ?? "",
+                    //       price: prodact.price.toString(),
+                    //       onTap: () {
+                    //         GoRouter.of(context).pushNamed(AppRoutes.productScreen,extra: products);
+                    //       },
+                    //     );
+                    //   }).toList()
+                    // ),
+                  ),
+                );
+              }
+
+              return Text("there is an error");
+            },
+          ),
+        ],
+      ),
+    );
+  }
+}
