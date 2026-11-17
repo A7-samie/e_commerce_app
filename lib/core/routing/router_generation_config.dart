@@ -1,5 +1,4 @@
 import 'package:e_commerce_app/features/cart/cart_screen.dart';
-import 'package:e_commerce_app/features/cart/cubit/cart_cubit.dart';
 import 'package:e_commerce_app/features/splash_screen/splash_screen.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
@@ -23,7 +22,6 @@ class RouterGenerationConfig {
         path: AppRoutes.splashScreen,
         builder: (context, state) => SplashScreen(),
       ),
-
       GoRoute(
         name: AppRoutes.loginScreen,
         path: AppRoutes.loginScreen,
@@ -37,36 +35,25 @@ class RouterGenerationConfig {
         path: AppRoutes.registerScreen,
         builder: (context, state) => const RegisterScreen(),
       ),
-      ShellRoute(
-        builder: (context, state, child) {
-          return BlocProvider(
-            create: (context) => sl<CartCubit>(),
-            child: child,
-          );
+      GoRoute(
+        name: AppRoutes.mainScreen,
+        path: AppRoutes.mainScreen,
+        builder: (context, state) => MainScreen(),
+      ),
+      GoRoute(
+        name: AppRoutes.productScreen,
+        path: AppRoutes.productScreen,
+        builder: (context, state) {
+          ProdactsModel productList = state.extra as ProdactsModel;
+          return ProductScreen(
+            product: productList,
+          ); // بيبعت أول عنصر للـ Screen//)
         },
-        routes: [
-          GoRoute(
-            name: AppRoutes.mainScreen,
-            path: AppRoutes.mainScreen,
-            builder: (context, state) => MainScreen(),
-          ),
-          GoRoute(
-            name: AppRoutes.productScreen,
-            path: AppRoutes.productScreen,
-            builder: (context, state) {
-              ProdactsModel productList = state.extra as ProdactsModel;
-
-              return ProductScreen(
-                product: productList,
-              ); // بيبعت أول عنصر للـ Screen//)
-            },
-          ),
-          GoRoute(
-            name: AppRoutes.cartScreen,
-            path: AppRoutes.cartScreen,
-            builder: (context, state) => CartScreen(),
-          ),
-        ],
+      ),
+      GoRoute(
+        name: AppRoutes.cartScreen,
+        path: AppRoutes.cartScreen,
+        builder: (context, state) => CartScreen(),
       ),
       GoRoute(
         name: AppRoutes.addressScreen,

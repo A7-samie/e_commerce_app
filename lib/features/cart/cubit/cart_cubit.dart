@@ -73,9 +73,13 @@ class CartCubit extends Cubit<CartState> {
           }
         }
 
-        _savedProducts = filtered;
+        _savedProducts = mergedProducts;
         cart.products = List.from(_savedProducts);
         emit(CartssucessState(cart));
+        log(
+          'fetchCarts merged count: ${_savedProducts.length} | cubit: $hashCode',
+        );
+        log('fetchCarts merged count: ${_savedProducts.length}');
       },
     );
   }
@@ -100,6 +104,25 @@ class CartCubit extends Cubit<CartState> {
             filtered.add(cart.products![i]);
           }
         }
+        bool isAddedProductInFiltered = filtered.any(
+          (item) => item.id == product.id,
+        );
+        if (!isAddedProductInFiltered && product.id != null) {
+          double unitPrice = (product.price ?? 0).toDouble();
+          double itemTotal = unitPrice * quantity;
+          filtered.add(
+            Product(
+              id: product.id,
+              title: product.title,
+              price: unitPrice,
+              quantity: quantity,
+              total: itemTotal,
+              discountPercentage: product.discountPercentage?.toDouble(),
+              discountedTotal: itemTotal,
+              thumbnail: product.thumbnail,
+            ),
+          );
+        }
         List<Product> mergedProducts = List.from(_savedProducts);
         for (int i = 0; i < filtered.length; i++) {
           int? newId = filtered[i].id;
@@ -120,6 +143,10 @@ class CartCubit extends Cubit<CartState> {
         cart.products = List.from(_savedProducts);
         emit(AddCartssucessState(cart));
         emit(CartssucessState(cart));
+        log(
+          'AddCarts merged count: ${_savedProducts.length} | cubit: $hashCode',
+        );
+        log('AddCarts merged count: ${_savedProducts.length}');
       },
     );
   }

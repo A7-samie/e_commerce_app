@@ -1,6 +1,8 @@
 import 'package:e_commerce_app/core/routing/router_generation_config.dart';
 import 'package:e_commerce_app/core/styling/theme_data.dart';
 import 'package:e_commerce_app/core/utils/service_locator.dart';
+import 'package:e_commerce_app/features/cart/cubit/cart_cubit.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:material_ui/material_ui.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 
@@ -20,11 +22,14 @@ class MyApp extends StatelessWidget {
     return ScreenUtilInit(
       designSize: const Size(390, 844),
       builder: (context, child) {
-        return MaterialApp.router(
-          title: 'Flutter Demo',
-          theme: AppThemes.lightTheme,
-
-          routerConfig: RouterGenerationConfig.goRouter,
+        // التعديل المطلوب: وضع BlocProvider لـ CartCubit فوق MaterialApp.router لتوحيد النسخة على مستوى التطبيق
+        return BlocProvider(
+          create: (context) => sl<CartCubit>(),
+          child: MaterialApp.router(
+            title: 'Flutter Demo',
+            theme: AppThemes.lightTheme,
+            routerConfig: RouterGenerationConfig.goRouter,
+          ),
         );
       },
     );
