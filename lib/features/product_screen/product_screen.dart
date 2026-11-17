@@ -22,13 +22,19 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 
-class ProductScreen extends StatelessWidget {
+class ProductScreen extends StatefulWidget {
   final ProdactsModel product;
 
   const ProductScreen({super.key, required this.product});
 
   @override
+  State<ProductScreen> createState() => _ProductScreenState();
+}
+
+class _ProductScreenState extends State<ProductScreen> {
+  @override
   Widget build(BuildContext context) {
+    final product = widget.product;
     return Scaffold(
       appBar: AppBar(
         title: const Text('Details'),
