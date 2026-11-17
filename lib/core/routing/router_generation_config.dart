@@ -37,38 +37,41 @@ class RouterGenerationConfig {
         path: AppRoutes.registerScreen,
         builder: (context, state) => const RegisterScreen(),
       ),
-      GoRoute(
-        name: AppRoutes.mainScreen,
-        path: AppRoutes.mainScreen,
-        builder: (context, state) => BlocProvider(
-          create: (context) => sl<CartCubit>(),
-          child: MainScreen(),
-        ),
-      ),
-      GoRoute(
-        name: AppRoutes.productScreen,
-        path: AppRoutes.productScreen,
-        builder: (context, state) {
-          ProdactsModel productList = state.extra as ProdactsModel;
-
+      ShellRoute(
+        builder: (context, state, child) {
           return BlocProvider(
             create: (context) => sl<CartCubit>(),
-            child: ProductScreen(product: productList),
-          ); // بيبعت أول عنصر للـ Screen//)
+            child: child,
+          );
         },
+        routes: [
+          GoRoute(
+            name: AppRoutes.mainScreen,
+            path: AppRoutes.mainScreen,
+            builder: (context, state) => MainScreen(),
+          ),
+          GoRoute(
+            name: AppRoutes.productScreen,
+            path: AppRoutes.productScreen,
+            builder: (context, state) {
+              ProdactsModel productList = state.extra as ProdactsModel;
+
+              return ProductScreen(
+                product: productList,
+              ); // بيبعت أول عنصر للـ Screen//)
+            },
+          ),
+          GoRoute(
+            name: AppRoutes.cartScreen,
+            path: AppRoutes.cartScreen,
+            builder: (context, state) => CartScreen(),
+          ),
+        ],
       ),
       GoRoute(
         name: AppRoutes.addressScreen,
         path: AppRoutes.addressScreen,
         builder: (context, state) => const AddressScreen(),
-      ),
-      GoRoute(
-        name: AppRoutes.cartScreen,
-        path: AppRoutes.cartScreen,
-        builder: (context, state) => BlocProvider(
-          create: (context) => sl<CartCubit>(),
-          child: CartScreen(),
-        ),
       ),
     ],
   );

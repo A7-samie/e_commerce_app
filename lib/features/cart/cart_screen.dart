@@ -24,6 +24,14 @@ class _CartScreenState extends State<CartScreen> {
   List<Product> products = [];
   List<int> quantities = [];
   bool isLoaded = false;
+  @override
+  void initState() {
+    super.initState();
+    final currentState = context.read<CartCubit>().state;
+    if (currentState is CartsInitialState) {
+      context.read<CartCubit>().fetchCarts();
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -114,9 +122,13 @@ class _CartScreenState extends State<CartScreen> {
             );
           }
 
-          if (state is CartssucessState) {
-            if (!isLoaded) {
-              products = List.from(state.cart.products ?? []);
+          if (state is CartssucessState || state is AddCartssucessState) {
+            final currentCart = state is CartssucessState
+                ? state.cart
+                : (state as AddCartssucessState).cart;
+
+            products = List.from(currentCart.products ?? []);
+            if (!isLoaded || quantities.length != products.length) {
               quantities = [];
               for (int i = 0; i < products.length; i++) {
                 quantities.add(products[i].quantity ?? 1);
@@ -168,9 +180,11 @@ class _CartScreenState extends State<CartScreen> {
                             }
                           },
                           onDelete: () {
+                            context.read<CartCubit>().deleteProductAt(i);
                             setState(() {
-                              products.removeAt(i);
-                              quantities.removeAt(i);
+                              if (i < quantities.length) {
+                                quantities.removeAt(i);
+                              }
                             });
                           },
                         ),
