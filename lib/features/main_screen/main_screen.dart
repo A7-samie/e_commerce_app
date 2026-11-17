@@ -23,7 +23,7 @@ class _MainScreenState extends State<MainScreen> {
   int currentIndex = 0;
 
   List<Widget> screens = [
-    HomeScreen(),
+    BlocProvider(create: (context) => sl<ProdactsCubit>(), child: HomeScreen()),
     CartScreen(),
     BlocProvider(create: (context) => sl<AuthCubit>(), child: AccountScreen()),
   ];

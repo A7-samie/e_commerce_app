@@ -86,7 +86,9 @@ class _HomeScreenState extends State<HomeScreen> {
                           setState(() {
                             SelectedCat = cat;
                             if (SelectedCat == "ALL") {
-                              context.read<ProdactsCubit>().fetchProdacts();
+                              context.read<ProdactsCubit>().fetchProdacts(
+                                forceRefresh: true,
+                              );
                             } else {
                               context
                                   .read<ProdactsCubit>()
@@ -108,10 +110,9 @@ class _HomeScreenState extends State<HomeScreen> {
               if (state is ProdactsLodingState) {
                 return Expanded(
                   child: GridView.builder(
-                    physics: const NeverScrollableScrollPhysics(), // أو BouncingScrollPhysics حسب رغبتك
+                    physics: const NeverScrollableScrollPhysics(),
                     shrinkWrap: true,
-                    itemCount:
-                        6, // عدد العناصر الوهمية اللي هتظهر أثناء التحميل
+                    itemCount: 6,
                     gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
                       crossAxisCount: 2,
                       mainAxisSpacing: 16.sp,
@@ -221,9 +222,8 @@ class _HomeScreenState extends State<HomeScreen> {
                           childAspectRatio: 0.8,
                         ),
                         children: products.asMap().entries.map((entry) {
-                          final int index =
-                              entry.key; // جبنا الـ index هنا بكل سهولة
-                          final product = entry.value; // العنصر نفسه
+                          final int index = entry.key;
+                          final product = entry.value;
 
                           return AnimationConfiguration.staggeredList(
                             position: index,
@@ -238,7 +238,6 @@ class _HomeScreenState extends State<HomeScreen> {
                                   title: product.title ?? "",
                                   price: product.price.toString(),
                                   onTap: () {
-                                    // هنا هيبعت المنتج الخاص بالاندكس ده لوحده
                                     GoRouter.of(context).pushNamed(
                                       AppRoutes.productScreen,
                                       extra: products[index],
@@ -251,32 +250,11 @@ class _HomeScreenState extends State<HomeScreen> {
                         }).toList(),
                       ),
                     ),
-                    //  GridView(
-
-                    //   physics: BouncingScrollPhysics(),
-                    //   gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-
-                    //     crossAxisCount: 2,
-                    //     mainAxisSpacing: 16.sp,
-                    //     crossAxisSpacing: 16.sp,
-                    //     childAspectRatio: 0.8,
-                    //   ),
-                    //   children:products.map((prodact){
-                    //     return  ProductItemWidget(
-                    //       src:prodact.images,
-                    //       title:prodact.title ?? "",
-                    //       price: prodact.price.toString(),
-                    //       onTap: () {
-                    //         GoRouter.of(context).pushNamed(AppRoutes.productScreen,extra: products);
-                    //       },
-                    //     );
-                    //   }).toList()
-                    // ),
                   ),
                 );
               }
 
-              return Text("there is an error");
+              return Center(child: Text("there is an error"));
             },
           ),
         ],

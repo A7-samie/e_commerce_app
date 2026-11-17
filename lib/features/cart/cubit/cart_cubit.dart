@@ -15,12 +15,10 @@ class CartCubit extends Cubit<CartState> {
   final Set<int> _deletedProductIds = {};
   List<Product> _savedProducts = [];
   final List<int> _deletedIds = [];
-  static const String _deletedIdsKey = 'deleted_cart_product_ids';
-  static const String _savedProductsKey = 'saved_cart_products';
 
   Future<void> loadDeletedIds() async {
     final prefs = await SharedPreferences.getInstance();
-    final savedList = prefs.getStringList(_deletedIdsKey) ?? [];
+    final savedList = prefs.getStringList('deleted_cart_product_ids') ?? [];
     _deletedIds.clear();
     for (final item in savedList) {
       final parsed = int.tryParse(item);
@@ -34,7 +32,7 @@ class CartCubit extends Cubit<CartState> {
   Future<void> saveDeletedIds() async {
     final prefs = await SharedPreferences.getInstance();
     final stringList = _deletedIds.map((id) => id.toString()).toList();
-    await prefs.setStringList(_deletedIdsKey, stringList);
+    await prefs.setStringList('deleted_cart_product_ids', stringList);
     log('Saved deletedIds: $stringList');
   }
 
@@ -44,9 +42,9 @@ class CartCubit extends Cubit<CartState> {
     }
   }
 
-  Future<void> loadSavedProducts() async {
+  Future<void> loadsavedProducts() async {
     final prefs = await SharedPreferences.getInstance();
-    final rawJson = prefs.getString(_savedProductsKey);
+    final rawJson = prefs.getString('saved_cart_products');
     _savedProducts.clear();
     if (rawJson != null && rawJson.isNotEmpty) {
       final List<dynamic> decoded = jsonDecode(rawJson);
@@ -59,24 +57,23 @@ class CartCubit extends Cubit<CartState> {
         }
       }
     }
-    log('Loaded savedProducts count: ${_savedProducts.length}');
+    log('Loaded _savedProducts count: ${_savedProducts.length}');
   }
 
-  Future<void> saveSavedProducts() async {
+  Future<void> savedProducts() async {
     final prefs = await SharedPreferences.getInstance();
     final encoded = jsonEncode(
       _savedProducts.map((item) => item.toJson()).toList(),
     );
-    await prefs.setString(_savedProductsKey, encoded);
-    log('Saved savedProducts count: ${_savedProducts.length}');
+    await prefs.setString('saved_cart_products', encoded);
+    log('Saved _savedProducts count: ${_savedProducts.length}');
   }
 
   final CartRepo _cartRepo;
-  // ignore: strict_top_level_inference
-  fetchCarts() async {
+  Future<void> fetchCarts() async {
     emit(CartsLodingState());
     await loadDeletedIds();
-    await loadSavedProducts();
+    await loadsavedProducts();
     final res = await _cartRepo.getUserCart();
     res.fold(
       (error) {
@@ -106,18 +103,15 @@ class CartCubit extends Cubit<CartState> {
         _savedProducts = mergedProducts;
         cart.products = List.from(_savedProducts);
         emit(CartssucessState(cart));
-        log(
-          'fetchCarts merged count: ${_savedProducts.length} | cubit: $hashCode',
-        );
-        log('fetchCarts merged count: ${_savedProducts.length}');
       },
     );
   }
 
-  // ignore: strict_top_level_inference, non_constant_identifier_names
-  AddCarts({required ProdactsModel product, required int quantity}) async {
+  Future<void> addCarts({
+    required ProdactsModel product,
+    required int quantity,
+  }) async {
     emit(AddingToCartState());
-    // التعديل المطلوب: لو المنتج كان متحذوف واتضاف تاني، شيله من _deletedIds
     if (product.id != null) {
       _deletedIds.remove(product.id);
       await saveDeletedIds();
@@ -171,14 +165,10 @@ class CartCubit extends Cubit<CartState> {
         }
 
         _savedProducts = mergedProducts;
-        saveSavedProducts();
+        savedProducts();
         cart.products = List.from(_savedProducts);
         emit(AddCartssucessState(cart));
         emit(CartssucessState(cart));
-        log(
-          'AddCarts merged count: ${_savedProducts.length} | cubit: $hashCode',
-        );
-        log('AddCarts merged count: ${_savedProducts.length}');
       },
     );
   }
@@ -193,7 +183,7 @@ class CartCubit extends Cubit<CartState> {
           saveDeletedIds();
         }
         _savedProducts.removeWhere((item) => item.id == removed.id!);
-        saveSavedProducts();
+        savedProducts();
       }
       _cartItems.removeAt(index);
 
@@ -214,7 +204,7 @@ class CartCubit extends Cubit<CartState> {
       }
     }
     _savedProducts = filtered;
-    saveSavedProducts();
+    savedProducts();
   }
 
   void deleteProductAt(int index) async {
@@ -225,7 +215,7 @@ class CartCubit extends Cubit<CartState> {
         await saveDeletedIds();
       }
       _savedProducts.removeAt(index);
-      await saveSavedProducts();
+      await savedProducts();
 
       if (state is CartssucessState) {
         CartModel currentCart = (state as CartssucessState).cart;

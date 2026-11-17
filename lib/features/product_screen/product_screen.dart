@@ -222,7 +222,7 @@ class _ProductScreenState extends State<ProductScreen> {
                             ),
 
                             onPress: () {
-                              context.read<CartCubit>().AddCarts(
+                              context.read<CartCubit>().addCarts(
                                 product: product,
 
                                 quantity: 1,

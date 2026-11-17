@@ -22,7 +22,6 @@ class MyApp extends StatelessWidget {
     return ScreenUtilInit(
       designSize: const Size(390, 844),
       builder: (context, child) {
-        // التعديل المطلوب: وضع BlocProvider لـ CartCubit فوق MaterialApp.router لتوحيد النسخة على مستوى التطبيق
         return BlocProvider(
           create: (context) => sl<CartCubit>(),
           child: MaterialApp.router(
