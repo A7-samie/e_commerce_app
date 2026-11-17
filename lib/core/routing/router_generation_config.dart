@@ -42,7 +42,7 @@ class RouterGenerationConfig {
         path: AppRoutes.mainScreen,
         builder: (context, state) => BlocProvider(
           create: (context) => sl<CartCubit>(),
-          child: const MainScreen(),
+          child: MainScreen(),
         ),
       ),
       GoRoute(

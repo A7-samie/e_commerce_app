@@ -4,8 +4,6 @@
 
 import 'dart:convert';
 
-import 'package:e_commerce_app/features/home_screen/model/Prodacts_model.dart';
-
 CartModel cartModelFromJson(String str) => CartModel.fromJson(json.decode(str));
 
 String cartModelToJson(CartModel data) => json.encode(data.toJson());
@@ -55,7 +53,6 @@ class CartModel {
 }
 
 class Product {
-  List<ProdactsModel>? allProducts;
   int? id;
   String? title;
   double? price;
@@ -74,7 +71,6 @@ class Product {
     this.discountPercentage,
     this.discountedTotal,
     this.thumbnail,
-    this.allProducts,
   });
 
   factory Product.fromJson(Map<String, dynamic> json) => Product(
@@ -86,9 +82,6 @@ class Product {
     discountPercentage: json["discountPercentage"]?.toDouble(),
     discountedTotal: json["discountedTotal"]?.toDouble(),
     thumbnail: json["thumbnail"],
-    allProducts: json["allProducts"] == null
-        ? []
-        : List<ProdactsModel>.from(json["allProducts"]!.map((x) => x)),
   );
 
   Map<String, dynamic> toJson() => {

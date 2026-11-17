@@ -8,10 +8,17 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 
 class CartCubit extends Cubit<CartState> {
   CartCubit(this._cartRepo) : super(CartsInitialState());
+  List<Product> _cartItems = [];
+  final Set<int> _deletedProductIds = {};
+  List<Product> _savedProducts = [];
+  final List<int> _deletedIds = [];
+  void setInitialProducts(List<Product> items) {
+    if (_cartItems.isEmpty && _deletedProductIds.isEmpty) {
+      _cartItems = List.from(items);
+    }
+  }
 
   final CartRepo _cartRepo;
-  List<int> deletedIds = [];
-
   // ignore: strict_top_level_inference
   fetchCarts() async {
     emit(CartsLodingState());
@@ -21,7 +28,6 @@ class CartCubit extends Cubit<CartState> {
         emit(CartsErrorState(error));
       },
       (cart) {
-        cart.products = _filterDeleted(cart.products ?? []);
         emit(CartssucessState(cart));
       },
     );
@@ -41,52 +47,46 @@ class CartCubit extends Cubit<CartState> {
     );
   }
 
-  void addProductToCart(ProdactsModel prodact, int qty) {
-    if (prodact.id != null) {
-      deletedIds.remove(prodact.id);
-    }
+  void removeProductAt(int index) {
+    if (index >= 0 && index < _cartItems.length) {
+      final removed = _cartItems[index];
+      if (removed.id != null) {
+        _deletedProductIds.add(removed.id!);
+      }
+      _cartItems.removeAt(index);
 
-    Product newCartItem = Product(
-      id: prodact.id,
-      title: prodact.title,
-      price: prodact.price,
-      quantity: qty,
-      total: (prodact.price ?? 0) * qty,
-      thumbnail: prodact.thumbnail,
-    );
-
-    if (state is CartssucessState) {
-      CartModel currentCart = (state as CartssucessState).cart;
-      List<Product> updatedList = List.from(currentCart.products ?? []);
-      updatedList.add(newCartItem);
-      currentCart.products = _filterDeleted(updatedList);
-      emit(CartssucessState(currentCart));
-    } else {
-      CartModel newCart = CartModel(products: [newCartItem]);
-      emit(CartssucessState(newCart));
-    }
-  }
-
-  void deleteProduct(Product product, List<Product> currentList) {
-    if (product.id != null && !deletedIds.contains(product.id)) {
-      deletedIds.add(product.id!);
-    }
-
-    if (state is CartssucessState) {
-      CartModel currentCart = (state as CartssucessState).cart;
-      currentCart.products = _filterDeleted(currentList);
-      emit(CartssucessState(currentCart));
-    }
-  }
-
-  List<Product> _filterDeleted(List<Product> items) {
-    List<Product> result = [];
-    for (int i = 0; i < items.length; i++) {
-      int? id = items[i].id;
-      if (id == null || !deletedIds.contains(id)) {
-        result.add(items[i]);
+      if (state is CartssucessState) {
+        final currentCart = (state as CartssucessState).cart;
+        currentCart.products = List.from(_cartItems);
+        emit(CartssucessState(currentCart));
       }
     }
-    return result;
+  }
+
+  void updateProductsList(List<Product> incomingProducts) {
+    List<Product> filtered = [];
+    for (int i = 0; i < incomingProducts.length; i++) {
+      int? id = incomingProducts[i].id;
+      if (id == null || !_deletedIds.contains(id)) {
+        filtered.add(incomingProducts[i]);
+      }
+    }
+    _savedProducts = filtered;
+  }
+
+  void deleteProductAt(int index) {
+    if (index >= 0 && index < _savedProducts.length) {
+      int? id = _savedProducts[index].id;
+      if (id != null && !_deletedIds.contains(id)) {
+        _deletedIds.add(id);
+      }
+      _savedProducts.removeAt(index);
+
+      if (state is CartssucessState) {
+        CartModel currentCart = (state as CartssucessState).cart;
+        currentCart.products = List.from(_savedProducts);
+        emit(CartssucessState(currentCart));
+      }
+    }
   }
 }

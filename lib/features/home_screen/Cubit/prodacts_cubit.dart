@@ -5,32 +5,48 @@ import 'package:e_commerce_app/features/home_screen/repo/home_repo.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
 class ProdactsCubit extends Cubit<ProdactsState> {
-ProdactsCubit(this._homerepo) :super (ProdactsInitialState());
-final Homerepo _homerepo;
+  ProdactsCubit(this._homerepo) : super(ProdactsInitialState());
+  final Homerepo _homerepo;
+  bool isLoaded = false;
 
-void fetchProdacts()async{
-  emit(ProdactsLodingState());
-  final Either<String,List<ProdactsModel>> res =await _homerepo.getProdacts();
+  void fetchProdacts({bool forceRefresh = false}) async {
+    if (isLoaded && !forceRefresh) {
+      return;
+    }
+    emit(ProdactsLodingState());
+    final Either<String, List<ProdactsModel>> res = await _homerepo
+        .getProdacts();
+    if (isClosed) return;
 
-  res.fold((error){
-    emit(ProdactsErrorState(error));
-  },(right){
-    emit(ProdactsLodingState()); // أو اللودد حسب حالتك الصحيحة
-    emit(ProdactsLodedState(right));
+    res.fold(
+      (error) {
+        emit(ProdactsErrorState(error));
+      },
+      (right) {
+        if (!isClosed) {
+          isLoaded = true;
+          emit(ProdactsLodedState(right));
+        }
+      },
+    );
   }
-  );
-}
-void fetchProdactsCategories(String catName)async{
-  emit(ProdactsLodingState());
-  final res =await _homerepo.getProdactsCategories(catName);
-  res.fold((error)
-  {
-    emit(ProdactsErrorState(error));
-  },(right){
-        emit(ProdactsLodedState(right));
 
+  void fetchProdactsCategories(String catName) async {
+    emit(ProdactsLodingState());
+    final res = await _homerepo.getProdactsCategories(catName);
+    if (isClosed) return;
+
+    res.fold(
+      (error) {
+        if (!isClosed) {
+          emit(ProdactsErrorState(error));
+        }
+      },
+      (right) {
+        if (!isClosed) {
+          emit(ProdactsLodedState(right));
+        }
+      },
+    );
   }
-  );
 }
-
-} 
