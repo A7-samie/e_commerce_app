@@ -23,52 +23,53 @@ class _MainScreenState extends State<MainScreen> {
   int currentIndex = 0;
 
   List<Widget> screens = [
-    MultiBlocProvider(
-      providers: [
-        BlocProvider(create: (context) => sl<ProdactsCubit>()),
-        BlocProvider(create: (context) => sl<CategoriesCubit>()),
-      ],
-      child: HomeScreen(),
-    ),
-
+    HomeScreen(),
     CartScreen(),
     BlocProvider(create: (context) => sl<AuthCubit>(), child: AccountScreen()),
   ];
 
   @override
   Widget build(BuildContext context) {
-    return SafeArea(
-      child: Scaffold(
-        body: screens[currentIndex],
-        bottomNavigationBar: BottomNavigationBar(
-          type: BottomNavigationBarType.fixed,
-          backgroundColor: Colors.white,
-          unselectedItemColor: Colors.grey,
-          elevation: 1,
-          selectedItemColor: AppColors.primaryColor,
-          currentIndex: currentIndex,
-          onTap: (value) {
-            setState(() {
-              currentIndex = value;
-            });
-            if (value == 1) {
-              context.read<CartCubit>().fetchCarts();
-            }
-          },
-          items: [
-            BottomNavigationBarItem(
-              icon: Icon(Icons.home, size: 30.sp),
-              label: "Home",
-            ),
-            BottomNavigationBarItem(
-              icon: Icon(Icons.shopping_cart, size: 30.sp),
-              label: "Cart",
-            ),
-            BottomNavigationBarItem(
-              icon: Icon(Icons.person_3_outlined, size: 30.sp),
-              label: "Account",
-            ),
-          ],
+    return MultiBlocProvider(
+      providers: [
+        BlocProvider(create: (context) => sl<ProdactsCubit>()..fetchProdacts()),
+        BlocProvider(
+          create: (context) => sl<CategoriesCubit>()..fetchCategories(),
+        ),
+      ],
+      child: SafeArea(
+        child: Scaffold(
+          body: screens[currentIndex],
+          bottomNavigationBar: BottomNavigationBar(
+            type: BottomNavigationBarType.fixed,
+            backgroundColor: Colors.white,
+            unselectedItemColor: Colors.grey,
+            elevation: 1,
+            selectedItemColor: AppColors.primaryColor,
+            currentIndex: currentIndex,
+            onTap: (value) {
+              setState(() {
+                currentIndex = value;
+              });
+              if (value == 1) {
+                context.read<CartCubit>().fetchCarts();
+              }
+            },
+            items: [
+              BottomNavigationBarItem(
+                icon: Icon(Icons.home, size: 30.sp),
+                label: "Home",
+              ),
+              BottomNavigationBarItem(
+                icon: Icon(Icons.shopping_cart, size: 30.sp),
+                label: "Cart",
+              ),
+              BottomNavigationBarItem(
+                icon: Icon(Icons.person_3_outlined, size: 30.sp),
+                label: "Account",
+              ),
+            ],
+          ),
         ),
       ),
     );

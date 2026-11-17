@@ -1,154 +1,141 @@
+import 'package:cached_network_image/cached_network_image.dart';
 import 'package:e_commerce_app/core/styling/app_styles.dart';
-
 import 'package:e_commerce_app/core/widgets/spacing_widgets.dart';
-
 import 'package:e_commerce_app/features/cart/models/cart_model.dart';
-
+import 'package:e_commerce_app/features/home_screen/model/Prodacts_model.dart';
+import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:material_ui/material_ui.dart';
 
-import 'package:flutter_screenutil/flutter_screenutil.dart';
-
-class CartItemWidget extends StatefulWidget {
+class CartItemWidget extends StatelessWidget {
   final Product product;
+  final List<ProdactsModel> allProducts;
+  final int quantity;
+  final Function() onAdd;
+  final Function() onRemove;
+  final Function() onDelete;
 
-  const CartItemWidget({super.key, required this.product});
+  const CartItemWidget({
+    super.key,
+    required this.product,
+    required this.allProducts,
+    required this.quantity,
+    required this.onAdd,
+    required this.onRemove,
+    required this.onDelete,
+  });
 
-  @override
-  State<CartItemWidget> createState() => _CartItemWidgetState();
-}
-
-class _CartItemWidgetState extends State<CartItemWidget> {
-  int counter = 0;
+  String getImage() {
+    for (int iM = 0; iM < allProducts.length; iM++) {
+      if (allProducts[iM].id == product.id) {
+        if (allProducts[iM].thumbnail != null &&
+            allProducts[iM].thumbnail != "") {
+          return allProducts[iM].thumbnail!;
+        }
+        if (allProducts[iM].images != null &&
+            allProducts[iM].images!.isNotEmpty) {
+          return allProducts[iM].images![0];
+        }
+      }
+    }
+    return product.thumbnail ?? "";
+  }
 
   @override
   Widget build(BuildContext context) {
+    String imageUrl = getImage();
+
     return Padding(
       padding: EdgeInsets.only(bottom: 16.h),
-
       child: Container(
         padding: EdgeInsets.all(16.sp),
-
         decoration: BoxDecoration(
           border: Border.all(color: Colors.grey, width: 0.5),
-
           borderRadius: BorderRadius.circular(8.r),
         ),
-
         child: Row(
           crossAxisAlignment: CrossAxisAlignment.start,
-
           children: [
             Container(
               width: 83.w,
-
               height: 79.h,
-
+              clipBehavior: Clip.antiAlias,
               decoration: BoxDecoration(
                 borderRadius: BorderRadius.circular(8.r),
-
-                color: Colors.grey,
+                color: Colors.grey[300],
               ),
-
-              // CachedNetworkImage(imageUrl: product.images![0]),
+              child: imageUrl != ""
+                  ? CachedNetworkImage(
+                      imageUrl: imageUrl,
+                      fit: BoxFit.cover,
+                      errorWidget: (context, url, error) =>
+                          const Icon(Icons.image, color: Colors.grey),
+                    )
+                  : const Icon(Icons.image, color: Colors.grey),
             ),
-
             WidthSpace(16),
-
             Expanded(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
-
                 children: [
                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
-
                     children: [
-                      Text(
-                        "${widget.product.title}",
-
-                        style: AppStyles.black15BoldStyle,
+                      Expanded(
+                        child: Text(
+                          product.title ?? "",
+                          style: AppStyles.black15BoldStyle,
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                        ),
                       ),
-
-                      Spacer(),
-
-                      Icon(Icons.delete, color: Colors.red),
+                      InkWell(
+                        onTap: onDelete,
+                        child: const Icon(Icons.delete, color: Colors.red),
+                      ),
                     ],
                   ),
-
                   const HeightSpace(30),
-
                   Row(
                     children: [
                       Text(
-                        "${widget.product.price} \$",
-
+                        "${product.price ?? 0} \$",
                         style: AppStyles.black15BoldStyle,
                       ),
-
-                      Spacer(),
-
+                      const Spacer(),
                       Row(
                         children: [
                           InkWell(
-                            onTap: () {
-                              setState(() {
-                                counter++;
-                              });
-                            },
-
+                            onTap: onAdd,
                             child: Container(
                               width: 24.w,
-
                               height: 24.h,
-
                               alignment: Alignment.center,
-
                               decoration: BoxDecoration(
                                 border: Border.all(
                                   color: Colors.grey,
-
                                   width: 0.5,
                                 ),
-
                                 borderRadius: BorderRadius.circular(8.r),
                               ),
-
                               child: Icon(Icons.add, size: 16.sp),
                             ),
                           ),
-
                           WidthSpace(8),
-
-                          Text("$counter", style: AppStyles.black15BoldStyle),
-
+                          Text("$quantity", style: AppStyles.black15BoldStyle),
                           WidthSpace(8),
-
                           InkWell(
-                            onTap: () {
-                              if (counter > 0) {
-                                setState(() {
-                                  counter--;
-                                });
-                              }
-                            },
-
+                            onTap: onRemove,
                             child: Container(
                               width: 24.w,
-
                               height: 24.h,
-
                               alignment: Alignment.center,
-
                               decoration: BoxDecoration(
                                 border: Border.all(
                                   color: Colors.grey,
-
                                   width: 0.5,
                                 ),
-
                                 borderRadius: BorderRadius.circular(8.r),
                               ),
-
                               child: Icon(Icons.remove, size: 16.sp),
                             ),
                           ),
