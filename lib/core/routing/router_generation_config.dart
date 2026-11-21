@@ -45,9 +45,7 @@ class RouterGenerationConfig {
         path: AppRoutes.productScreen,
         builder: (context, state) {
           ProdactsModel productList = state.extra as ProdactsModel;
-          return ProductScreen(
-            product: productList,
-          ); // بيبعت أول عنصر للـ Screen//)
+          return ProductScreen(product: productList);
         },
       ),
       GoRoute(

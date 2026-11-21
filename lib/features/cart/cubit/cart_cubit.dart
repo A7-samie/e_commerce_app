@@ -1,4 +1,3 @@
-// ignore: unused_import
 import 'dart:convert';
 import 'dart:developer';
 
@@ -26,14 +25,14 @@ class CartCubit extends Cubit<CartState> {
         _deletedIds.add(parsed);
       }
     }
-    log('Loaded deletedIds: $_deletedIds');
+    log(' $_deletedIds');
   }
 
   Future<void> saveDeletedIds() async {
     final prefs = await SharedPreferences.getInstance();
     final stringList = _deletedIds.map((id) => id.toString()).toList();
     await prefs.setStringList('deleted_cart_product_ids', stringList);
-    log('Saved deletedIds: $stringList');
+    log(' $stringList');
   }
 
   void setInitialProducts(List<Product> items) {
@@ -57,7 +56,7 @@ class CartCubit extends Cubit<CartState> {
         }
       }
     }
-    log('Loaded _savedProducts count: ${_savedProducts.length}');
+    log('${_savedProducts.length}');
   }
 
   Future<void> savedProducts() async {
@@ -65,8 +64,8 @@ class CartCubit extends Cubit<CartState> {
     final encoded = jsonEncode(
       _savedProducts.map((item) => item.toJson()).toList(),
     );
-    await prefs.setString('saved_cart_products', encoded);
-    log('Saved _savedProducts count: ${_savedProducts.length}');
+    await prefs.setString('saved cart products', encoded);
+    log(' ${_savedProducts.length}');
   }
 
   final CartRepo _cartRepo;

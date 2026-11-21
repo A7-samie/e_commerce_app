@@ -30,11 +30,11 @@ class HomeScreen extends StatefulWidget {
 }
 
 class _HomeScreenState extends State<HomeScreen> {
-  // ignore: non_constant_identifier_names
-  String SelectedCat = 'ALL';
+  String selectedCat = 'ALL';
+  final TextEditingController searchController = TextEditingController();
   @override
   void initState() {
-    context.read<ProdactsCubit>().fetchProdacts();
+    context.read<ProdactsCubit>().fetchProdacts(forceRefresh: true);
     context.read<CategoriesCubit>().fetchCategories();
 
     super.initState();
@@ -42,8 +42,6 @@ class _HomeScreenState extends State<HomeScreen> {
 
   @override
   Widget build(BuildContext context) {
-    // عشان احذف التوكن
-    // sl<StorageHelper>().removeToken();
     return Padding(
       padding: EdgeInsets.symmetric(horizontal: 18.w),
       child: Column(
@@ -57,16 +55,34 @@ class _HomeScreenState extends State<HomeScreen> {
           const HeightSpace(16),
           Row(
             children: [
-              CustomTextField(width: 270.w, hintText: "Search For Clothes"),
+              CustomTextField(
+                onChanged: (value) {
+                  context.read<ProdactsCubit>().searchProdacts(
+                    searchController.text,
+                  );
+                },
+                controller: searchController,
+
+                width: 270.w,
+                hintText: "Search For Clothes",
+              ),
               const WidthSpace(8),
-              Container(
-                width: 56.w,
-                height: 56.h,
-                decoration: BoxDecoration(
-                  color: AppColors.primaryColor,
-                  borderRadius: BorderRadius.circular(8.r),
+              InkWell(
+                onTap: () {
+                  FocusScope.of(context).unfocus();
+                  context.read<ProdactsCubit>().searchProdacts(
+                    searchController.text,
+                  );
+                },
+                child: Container(
+                  width: 56.w,
+                  height: 56.h,
+                  decoration: BoxDecoration(
+                    color: AppColors.primaryColor,
+                    borderRadius: BorderRadius.circular(8.r),
+                  ),
+                  child: Icon(Icons.search, color: Colors.white),
                 ),
-                child: Icon(Icons.search, color: Colors.white),
               ),
             ],
           ),
@@ -81,11 +97,11 @@ class _HomeScreenState extends State<HomeScreen> {
                     children: state.categories.map((cat) {
                       return CategoryItemWidget(
                         categoryName: cat,
-                        IsSelected: SelectedCat == cat ? true : false,
+                        isSelected: selectedCat == cat ? true : false,
                         ontap: () {
                           setState(() {
-                            SelectedCat = cat;
-                            if (SelectedCat == "ALL") {
+                            selectedCat = cat;
+                            if (selectedCat == "ALL") {
                               context.read<ProdactsCubit>().fetchProdacts(
                                 forceRefresh: true,
                               );
@@ -126,9 +142,7 @@ class _HomeScreenState extends State<HomeScreen> {
                         child: Container(
                           decoration: BoxDecoration(
                             color: Colors.white,
-                            borderRadius: BorderRadius.circular(
-                              16.r,
-                            ), // نفس تقفيلة كارت المنتج الحقيقي
+                            borderRadius: BorderRadius.circular(16.r),
                           ),
                           child: Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
@@ -157,19 +171,16 @@ class _HomeScreenState extends State<HomeScreen> {
                                     mainAxisAlignment:
                                         MainAxisAlignment.spaceAround,
                                     children: [
-                                      // مكان العنوان الأول
                                       Container(
                                         width: double.infinity,
                                         height: 12.h,
                                         color: Colors.white,
                                       ),
-                                      // مكان العنوان التاني أو السطر القصير
                                       Container(
                                         width: 80.w,
                                         height: 12.h,
                                         color: Colors.white,
                                       ),
-                                      // مكان السعر والزرار
                                       Row(
                                         mainAxisAlignment:
                                             MainAxisAlignment.spaceBetween,
@@ -208,48 +219,58 @@ class _HomeScreenState extends State<HomeScreen> {
                     color: AppColors.primaryColor,
                     backgroundColor: Colors.white,
                     onRefresh: () async {
-                      SelectedCat = "ALL";
+                      selectedCat = "ALL";
+                      searchController.clear();
                       setState(() {});
-                      context.read<ProdactsCubit>().fetchProdacts();
+                      context.read<ProdactsCubit>().fetchProdacts(
+                        forceRefresh: true,
+                      );
                     },
-                    child: AnimationLimiter(
-                      child: GridView(
-                        physics: BouncingScrollPhysics(),
-                        gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-                          crossAxisCount: 2,
-                          mainAxisSpacing: 16.sp,
-                          crossAxisSpacing: 16.sp,
-                          childAspectRatio: 0.8,
-                        ),
-                        children: products.asMap().entries.map((entry) {
-                          final int index = entry.key;
-                          final product = entry.value;
+                    child: products.isEmpty
+                        ? ListView(
+                            physics: const AlwaysScrollableScrollPhysics(),
+                            children: const [
+                              SizedBox(height: 150),
+                              Center(child: Text("Not Found")),
+                            ],
+                          )
+                        : AnimationLimiter(
+                            child: GridView(
+                              physics: const BouncingScrollPhysics(),
+                              gridDelegate:
+                                  SliverGridDelegateWithFixedCrossAxisCount(
+                                    crossAxisCount: 2,
+                                    mainAxisSpacing: 16.sp,
+                                    crossAxisSpacing: 16.sp,
+                                    childAspectRatio: 0.8,
+                                  ),
+                              children: products.asMap().entries.map((entry) {
+                                final int index = entry.key;
+                                final product = entry.value;
 
-                          return AnimationConfiguration.staggeredList(
-                            position: index,
-                            duration: const Duration(milliseconds: 700),
-
-                            child: SlideAnimation(
-                              verticalOffset: 50,
-
-                              child: FadeInAnimation(
-                                child: ProductItemWidget(
-                                  src: product.images,
-                                  title: product.title ?? "",
-                                  price: product.price.toString(),
-                                  onTap: () {
-                                    GoRouter.of(context).pushNamed(
-                                      AppRoutes.productScreen,
-                                      extra: products[index],
-                                    );
-                                  },
-                                ),
-                              ),
+                                return AnimationConfiguration.staggeredList(
+                                  position: index,
+                                  duration: const Duration(milliseconds: 700),
+                                  child: SlideAnimation(
+                                    verticalOffset: 50,
+                                    child: FadeInAnimation(
+                                      child: ProductItemWidget(
+                                        src: product.images,
+                                        title: product.title ?? "",
+                                        price: product.price.toString(),
+                                        onTap: () {
+                                          GoRouter.of(context).pushNamed(
+                                            AppRoutes.productScreen,
+                                            extra: products[index],
+                                          );
+                                        },
+                                      ),
+                                    ),
+                                  ),
+                                );
+                              }).toList(),
                             ),
-                          );
-                        }).toList(),
-                      ),
-                    ),
+                          ),
                   ),
                 );
               }

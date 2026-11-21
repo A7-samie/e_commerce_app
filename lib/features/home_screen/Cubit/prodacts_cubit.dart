@@ -8,6 +8,34 @@ class ProdactsCubit extends Cubit<ProdactsState> {
   ProdactsCubit(this._homerepo) : super(ProdactsInitialState());
   final Homerepo _homerepo;
   bool isLoaded = false;
+  List<ProdactsModel> allProdacts = [];
+  Future<void> searchProdacts(String query) async {
+    final q = query.trim();
+
+    if (q.isEmpty) {
+      emit(ProdactsLodedState(allProdacts));
+      return;
+    }
+
+    emit(ProdactsLodingState());
+
+    final Either<String, List<ProdactsModel>> res = await _homerepo
+        .searchProdacts(q);
+    if (isClosed) return;
+
+    res.fold(
+      (error) {
+        if (!isClosed) {
+          emit(ProdactsErrorState(error));
+        }
+      },
+      (right) {
+        if (!isClosed) {
+          emit(ProdactsLodedState(right));
+        }
+      },
+    );
+  }
 
   void fetchProdacts({bool forceRefresh = false}) async {
     if (isLoaded && !forceRefresh) {
@@ -25,6 +53,7 @@ class ProdactsCubit extends Cubit<ProdactsState> {
       (right) {
         if (!isClosed) {
           isLoaded = true;
+          allProdacts = right;
           emit(ProdactsLodedState(right));
         }
       },

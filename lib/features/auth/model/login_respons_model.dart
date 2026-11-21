@@ -6,7 +6,7 @@ class LoginResponsModel {
   final String? lastName;
   final String? gender;
   final String? image;
-  final String? accessToken; // تم التعديل هنا ليطابق السيرفر
+  final String? accessToken;
 
   LoginResponsModel({
     this.id,
@@ -28,7 +28,7 @@ class LoginResponsModel {
       lastName: json['lastName'],
       gender: json['gender'],
       image: json['image'],
-      accessToken: json['accessToken'], // ربط المفتاح الصحيح من الـ JSON
+      accessToken: json['accessToken'],
     );
   }
 

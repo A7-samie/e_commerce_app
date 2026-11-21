@@ -64,18 +64,18 @@ class CartRepo {
 
   Future<Either<String, CartModel>> getUserCart() async {
     try {
-      final response = await _dioHelper.getRequest(endPoint: "${ApiEndpoints.carts}/user/2");
-      
+      final response = await _dioHelper.getRequest(
+        endPoint: "${ApiEndpoints.carts}/user/2",
+      );
+
       if (response.statusCode == 200) {
-        // حماية لو الراجع List أو Map (حسب نظام الـ API)
         final data = response.data;
         Map<String, dynamic> cartData;
-        
+
         if (data is List) {
           if (data.isEmpty) return Left("Cart is empty");
           cartData = data[0] as Map<String, dynamic>;
         } else if (data is Map && data.containsKey('carts')) {
-          // لو الـ API بيرجع {"carts": [...]}
           List carts = data['carts'];
           if (carts.isEmpty) return Left("Cart is empty");
           cartData = carts[0] as Map<String, dynamic>;
@@ -95,24 +95,20 @@ class CartRepo {
   }
 
   Future<Either<String, CartModel>> addToCart({
-    required ProdactsModel product, 
+    required ProdactsModel product,
     required int quantity,
   }) async {
     try {
-      // تصحيح الرابط بإضافة علامة الـ / وتحديد رقم الـ Cart أو الـ Endpoint الصح
       final response = await _dioHelper.putRequest(
-        endPoint: "${ApiEndpoints.carts}/1", 
+        endPoint: "${ApiEndpoints.carts}/1",
         data: {
           "userId": 1,
           "products": [
-            {
-              "id": product.id,
-              "quantity": quantity,
-            }
-          ]
+            {"id": product.id, "quantity": quantity},
+          ],
         },
       );
-      
+
       if (response.statusCode == 200) {
         CartModel cartModel = CartModel.fromJson(response.data);
         return Right(cartModel);

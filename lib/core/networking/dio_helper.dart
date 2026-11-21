@@ -1,5 +1,3 @@
-// ignore_for_file: strict_top_level_inference
-
 import 'package:dio/dio.dart';
 import 'package:e_commerce_app/core/networking/api_endpoints.dart';
 import 'package:pretty_dio_logger/pretty_dio_logger.dart';
