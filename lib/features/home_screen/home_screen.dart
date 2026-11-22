@@ -31,6 +31,7 @@ class HomeScreen extends StatefulWidget {
 
 class _HomeScreenState extends State<HomeScreen> {
   String selectedCat = 'ALL';
+  bool hideRow = false;
   final TextEditingController searchController = TextEditingController();
   @override
   void initState() {
@@ -38,6 +39,12 @@ class _HomeScreenState extends State<HomeScreen> {
     context.read<CategoriesCubit>().fetchCategories();
 
     super.initState();
+  }
+
+  @override
+  void dispose() {
+    searchController.dispose();
+    super.dispose();
   }
 
   @override
@@ -50,29 +57,70 @@ class _HomeScreenState extends State<HomeScreen> {
           const HeightSpace(28),
           SizedBox(
             width: 335.w,
-            child: Text("Discover", style: AppStyles.primaryHeadLinesStyle),
+            child: Row(
+              children: [
+                hideRow
+                    ? IconButton(
+                        onPressed: () {
+                          setState(() {
+                            hideRow = false;
+                            searchController.clear();
+                          });
+                          context.read<ProdactsCubit>().fetchProdacts(
+                            forceRefresh: true,
+                          );
+                        },
+                        icon: Icon(Icons.arrow_back, size: 24),
+                        padding: EdgeInsets.zero,
+                      )
+                    : SizedBox.shrink(),
+                SizedBox(
+                  child: Text(
+                    "Discover",
+                    style: AppStyles.primaryHeadLinesStyle,
+                  ),
+                ),
+              ],
+            ),
           ),
           const HeightSpace(16),
           Row(
             children: [
               CustomTextField(
                 onChanged: (value) {
-                  context.read<ProdactsCubit>().searchProdacts(
-                    searchController.text,
+                  if (value.trim().isEmpty && hideRow) {
+                    setState(() {
+                      hideRow = true;
+                    });
+                  }
+                  context.read<ProdactsCubit>().fetchProdacts(
+                    forceRefresh: true,
                   );
                 },
                 controller: searchController,
 
                 width: 270.w,
-                hintText: "Search For Clothes",
+                hintText: "Search",
               ),
               const WidthSpace(8),
               InkWell(
                 onTap: () {
                   FocusScope.of(context).unfocus();
-                  context.read<ProdactsCubit>().searchProdacts(
-                    searchController.text,
-                  );
+                  if (searchController.text.trim().isEmpty) {
+                    setState(() {
+                      hideRow = false;
+                    });
+                    context.read<ProdactsCubit>().fetchProdacts(
+                      forceRefresh: true,
+                    );
+                  } else {
+                    setState(() {
+                      hideRow = true;
+                    });
+                    context.read<ProdactsCubit>().searchProdacts(
+                      searchController.text,
+                    );
+                  }
                 },
                 child: Container(
                   width: 56.w,
@@ -91,31 +139,33 @@ class _HomeScreenState extends State<HomeScreen> {
           BlocBuilder<CategoriesCubit, CategoriesState>(
             builder: (context, state) {
               if (state is CategoriesLodedState) {
-                return SingleChildScrollView(
-                  scrollDirection: Axis.horizontal,
-                  child: Row(
-                    children: state.categories.map((cat) {
-                      return CategoryItemWidget(
-                        categoryName: cat,
-                        isSelected: selectedCat == cat ? true : false,
-                        ontap: () {
-                          setState(() {
-                            selectedCat = cat;
-                            if (selectedCat == "ALL") {
-                              context.read<ProdactsCubit>().fetchProdacts(
-                                forceRefresh: true,
-                              );
-                            } else {
-                              context
-                                  .read<ProdactsCubit>()
-                                  .fetchProdactsCategories(cat);
-                            }
-                          });
-                        },
+                return hideRow
+                    ? SizedBox.shrink()
+                    : SingleChildScrollView(
+                        scrollDirection: Axis.horizontal,
+                        child: Row(
+                          children: state.categories.map((cat) {
+                            return CategoryItemWidget(
+                              categoryName: cat,
+                              isSelected: selectedCat == cat ? true : false,
+                              ontap: () {
+                                setState(() {
+                                  selectedCat = cat;
+                                  if (selectedCat == "ALL") {
+                                    context.read<ProdactsCubit>().fetchProdacts(
+                                      forceRefresh: true,
+                                    );
+                                  } else {
+                                    context
+                                        .read<ProdactsCubit>()
+                                        .fetchProdactsCategories(cat);
+                                  }
+                                });
+                              },
+                            );
+                          }).toList(),
+                        ),
                       );
-                    }).toList(),
-                  ),
-                );
               }
               return SizedBox.shrink();
             },
@@ -219,6 +269,7 @@ class _HomeScreenState extends State<HomeScreen> {
                     color: AppColors.primaryColor,
                     backgroundColor: Colors.white,
                     onRefresh: () async {
+                      hideRow = false;
                       selectedCat = "ALL";
                       searchController.clear();
                       setState(() {});

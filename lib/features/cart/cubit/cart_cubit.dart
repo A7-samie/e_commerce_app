@@ -10,14 +10,18 @@ import 'package:shared_preferences/shared_preferences.dart';
 
 class CartCubit extends Cubit<CartState> {
   CartCubit(this._cartRepo) : super(CartsInitialState());
-  List<Product> _cartItems = [];
-  final Set<int> _deletedProductIds = {};
+
+  final CartRepo _cartRepo;
+
+  static const String _savedProductsKey = 'saved_cart_products';
+  static const String _deletedIdsKey = 'deleted_cart_product_ids';
+
   List<Product> _savedProducts = [];
   final List<int> _deletedIds = [];
 
   Future<void> loadDeletedIds() async {
     final prefs = await SharedPreferences.getInstance();
-    final savedList = prefs.getStringList('deleted_cart_product_ids') ?? [];
+    final savedList = prefs.getStringList(_deletedIdsKey) ?? [];
     _deletedIds.clear();
     for (final item in savedList) {
       final parsed = int.tryParse(item);
@@ -25,25 +29,19 @@ class CartCubit extends Cubit<CartState> {
         _deletedIds.add(parsed);
       }
     }
-    log(' $_deletedIds');
+    log('Deleted IDs: $_deletedIds');
   }
 
   Future<void> saveDeletedIds() async {
     final prefs = await SharedPreferences.getInstance();
     final stringList = _deletedIds.map((id) => id.toString()).toList();
-    await prefs.setStringList('deleted_cart_product_ids', stringList);
-    log(' $stringList');
-  }
-
-  void setInitialProducts(List<Product> items) {
-    if (_cartItems.isEmpty && _deletedProductIds.isEmpty) {
-      _cartItems = List.from(items);
-    }
+    await prefs.setStringList(_deletedIdsKey, stringList);
+    log('Saved Deleted IDs: $stringList');
   }
 
   Future<void> loadsavedProducts() async {
     final prefs = await SharedPreferences.getInstance();
-    final rawJson = prefs.getString('saved_cart_products');
+    final rawJson = prefs.getString(_savedProductsKey);
     _savedProducts.clear();
     if (rawJson != null && rawJson.isNotEmpty) {
       final List<dynamic> decoded = jsonDecode(rawJson);
@@ -56,7 +54,7 @@ class CartCubit extends Cubit<CartState> {
         }
       }
     }
-    log('${_savedProducts.length}');
+    log('Loaded savedProducts: ${_savedProducts.length}');
   }
 
   Future<void> savedProducts() async {
@@ -64,42 +62,50 @@ class CartCubit extends Cubit<CartState> {
     final encoded = jsonEncode(
       _savedProducts.map((item) => item.toJson()).toList(),
     );
-    await prefs.setString('saved cart products', encoded);
-    log(' ${_savedProducts.length}');
+    await prefs.setString(_savedProductsKey, encoded);
+    log('Saved savedProducts: ${_savedProducts.length}');
   }
 
-  final CartRepo _cartRepo;
   Future<void> fetchCarts() async {
     emit(CartsLodingState());
     await loadDeletedIds();
     await loadsavedProducts();
+
     final res = await _cartRepo.getUserCart();
     res.fold(
       (error) {
-        emit(CartsErrorState(error));
+        if (_savedProducts.isNotEmpty) {
+          emit(
+            CartssucessState(CartModel(products: List.from(_savedProducts))),
+          );
+        } else {
+          emit(CartsErrorState(error));
+        }
       },
-      (cart) {
-        List<Product> filtered = [];
-        for (int i = 0; i < (cart.products ?? []).length; i++) {
-          int? id = cart.products![i].id;
+      (cart) async {
+        final List<Product> mergedProducts = [];
+
+        for (final item in (cart.products ?? [])) {
+          final id = item.id;
           if (id == null || !_deletedIds.contains(id)) {
-            filtered.add(cart.products![i]);
+            mergedProducts.add(item);
           }
         }
-        List<Product> mergedProducts = List.from(filtered);
-        for (int i = 0; i < _savedProducts.length; i++) {
-          int? savedId = _savedProducts[i].id;
+
+        for (final savedItem in _savedProducts) {
+          final savedId = savedItem.id;
           if (savedId != null && !_deletedIds.contains(savedId)) {
-            bool alreadyExists = mergedProducts.any(
+            final alreadyExists = mergedProducts.any(
               (item) => item.id == savedId,
             );
             if (!alreadyExists) {
-              mergedProducts.add(_savedProducts[i]);
+              mergedProducts.add(savedItem);
             }
           }
         }
 
         _savedProducts = mergedProducts;
+        await savedProducts();
         cart.products = List.from(_savedProducts);
         emit(CartssucessState(cart));
       },
@@ -111,29 +117,32 @@ class CartCubit extends Cubit<CartState> {
     required int quantity,
   }) async {
     emit(AddingToCartState());
-    if (product.id != null) {
-      _deletedIds.remove(product.id);
+
+    if (product.id != null && _deletedIds.remove(product.id)) {
       await saveDeletedIds();
     }
+
     final res = await _cartRepo.addToCart(product: product, quantity: quantity);
     res.fold(
       (error) {
         emit(AddCartsErrorState(error));
       },
-      (cart) {
-        List<Product> filtered = [];
-        for (int i = 0; i < (cart.products ?? []).length; i++) {
-          int? id = cart.products![i].id;
+      (cart) async {
+        final List<Product> filtered = [];
+        for (final item in (cart.products ?? [])) {
+          final id = item.id;
           if (id == null || !_deletedIds.contains(id)) {
-            filtered.add(cart.products![i]);
+            filtered.add(item);
           }
         }
-        bool isAddedProductInFiltered = filtered.any(
+
+        final isAddedProductInFiltered = filtered.any(
           (item) => item.id == product.id,
         );
+
         if (!isAddedProductInFiltered && product.id != null) {
-          double unitPrice = (product.price ?? 0).toDouble();
-          double itemTotal = unitPrice * quantity;
+          final double unitPrice = (product.price ?? 0).toDouble();
+          final double itemTotal = unitPrice * quantity;
           filtered.add(
             Product(
               id: product.id,
@@ -147,24 +156,24 @@ class CartCubit extends Cubit<CartState> {
             ),
           );
         }
-        List<Product> mergedProducts = List.from(_savedProducts);
-        for (int i = 0; i < filtered.length; i++) {
-          int? newId = filtered[i].id;
-          int existingIndex = -1;
-          if (newId != null) {
-            existingIndex = mergedProducts.indexWhere(
-              (item) => item.id == newId,
-            );
-          }
+
+        final List<Product> mergedProducts = List.from(_savedProducts);
+        for (final item in filtered) {
+          final newId = item.id;
+          final existingIndex = newId != null
+              ? mergedProducts.indexWhere((element) => element.id == newId)
+              : -1;
+
           if (existingIndex != -1) {
-            mergedProducts[existingIndex] = filtered[i];
+            mergedProducts[existingIndex] = item;
           } else {
-            mergedProducts.add(filtered[i]);
+            mergedProducts.add(item);
           }
         }
 
         _savedProducts = mergedProducts;
-        savedProducts();
+        await savedProducts();
+
         cart.products = List.from(_savedProducts);
         emit(AddCartssucessState(cart));
         emit(CartssucessState(cart));
@@ -172,43 +181,16 @@ class CartCubit extends Cubit<CartState> {
     );
   }
 
-  void removeProductAt(int index) {
-    if (index >= 0 && index < _cartItems.length) {
-      final removed = _cartItems[index];
-      if (removed.id != null) {
-        _deletedProductIds.add(removed.id!);
-        if (!_deletedIds.contains(removed.id!)) {
-          _deletedIds.add(removed.id!);
-          saveDeletedIds();
-        }
-        _savedProducts.removeWhere((item) => item.id == removed.id!);
-        savedProducts();
-      }
-      _cartItems.removeAt(index);
-
-      if (state is CartssucessState) {
-        final currentCart = (state as CartssucessState).cart;
-        currentCart.products = List.from(_cartItems);
-        emit(CartssucessState(currentCart));
-      }
-    }
+  Future<void> updateProductsList(List<Product> incomingProducts) async {
+    _savedProducts = incomingProducts
+        .where((item) => item.id == null || !_deletedIds.contains(item.id))
+        .toList();
+    await savedProducts();
   }
 
-  void updateProductsList(List<Product> incomingProducts) {
-    List<Product> filtered = [];
-    for (int i = 0; i < incomingProducts.length; i++) {
-      int? id = incomingProducts[i].id;
-      if (id == null || !_deletedIds.contains(id)) {
-        filtered.add(incomingProducts[i]);
-      }
-    }
-    _savedProducts = filtered;
-    savedProducts();
-  }
-
-  void deleteProductAt(int index) async {
+  Future<void> deleteProductAt(int index) async {
     if (index >= 0 && index < _savedProducts.length) {
-      int? id = _savedProducts[index].id;
+      final id = _savedProducts[index].id;
       if (id != null && !_deletedIds.contains(id)) {
         _deletedIds.add(id);
         await saveDeletedIds();
@@ -217,7 +199,7 @@ class CartCubit extends Cubit<CartState> {
       await savedProducts();
 
       if (state is CartssucessState) {
-        CartModel currentCart = (state as CartssucessState).cart;
+        final currentCart = (state as CartssucessState).cart;
         currentCart.products = List.from(_savedProducts);
         emit(CartssucessState(currentCart));
       }

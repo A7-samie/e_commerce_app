@@ -1,3 +1,5 @@
+// ignore_for_file: strict_top_level_inference
+
 import 'package:dio/dio.dart';
 import 'package:e_commerce_app/core/networking/api_endpoints.dart';
 import 'package:pretty_dio_logger/pretty_dio_logger.dart';
@@ -44,10 +46,7 @@ class DioHelper {
     required Map<String, dynamic> data,
   }) async {
     try {
-      Response response = await dio!.put(
-        endPoint, // تم تصحيحها من base إلى endPoint
-        data: data,
-      );
+      Response response = await dio!.put(endPoint, data: data);
       return response;
     } catch (e) {
       rethrow;
