@@ -169,6 +169,15 @@ class CartCubit extends Cubit<CartState> {
           } else {
             mergedProducts.add(item);
           }
+          if (existingIndex != -1) {
+            final oldQty = mergedProducts[existingIndex].quantity ?? 1;
+            final updatedQty = item.id == product.id ? quantity : oldQty;
+            item.quantity = updatedQty;
+            final double unitPrice = (item.price ?? 0).toDouble();
+            item.total = unitPrice * updatedQty;
+            item.discountedTotal = unitPrice * updatedQty;
+            mergedProducts[existingIndex] = item;
+          }
         }
 
         _savedProducts = mergedProducts;
@@ -200,6 +209,29 @@ class CartCubit extends Cubit<CartState> {
 
       if (state is CartssucessState) {
         final currentCart = (state as CartssucessState).cart;
+        currentCart.products = List.from(_savedProducts);
+        emit(CartssucessState(currentCart));
+      }
+    }
+  }
+
+  Future<void> updateProductQuantity(int index, int newQuantity) async {
+    if (index >= 0 && index < _savedProducts.length) {
+      if (newQuantity < 1) return;
+
+      _savedProducts[index].quantity = newQuantity;
+      final double unitPrice = (_savedProducts[index].price ?? 0).toDouble();
+      _savedProducts[index].total = unitPrice * newQuantity;
+      _savedProducts[index].discountedTotal = unitPrice * newQuantity;
+
+      await savedProducts();
+
+      if (state is CartssucessState) {
+        final currentCart = (state as CartssucessState).cart;
+        currentCart.products = List.from(_savedProducts);
+        emit(CartssucessState(currentCart));
+      } else if (state is AddCartssucessState) {
+        final currentCart = (state as AddCartssucessState).cart;
         currentCart.products = List.from(_savedProducts);
         emit(CartssucessState(currentCart));
       }

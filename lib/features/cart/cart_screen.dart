@@ -168,15 +168,25 @@ class _CartScreenState extends State<CartScreen> {
                           allProducts: widget.allProducts,
                           quantity: quantities[i],
                           onAdd: () {
+                            final nextQty = quantities[i] + 1;
                             setState(() {
                               quantities[i] = quantities[i] + 1;
                             });
+                            context.read<CartCubit>().updateProductQuantity(
+                              i,
+                              nextQty,
+                            );
                           },
                           onRemove: () {
                             if (quantities[i] > 0) {
+                              final nextQty = quantities[i] - 1;
                               setState(() {
-                                quantities[i] = quantities[i] - 1;
+                                quantities[i] = nextQty;
                               });
+                              context.read<CartCubit>().updateProductQuantity(
+                                i,
+                                nextQty,
+                              );
                             }
                           },
                           onDelete: () {
