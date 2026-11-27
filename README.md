@@ -6,7 +6,7 @@ A fully functional **E-Commerce mobile application** built with **Flutter**, fea
 
 ## 📱 Screenshots
 
-![Register](Screenshot_1795780561.png) ![Login](Screenshot_1795780565.png) ![home_Screen](Screenshot_1795780608.png) ![SplashScreen](Screenshot_1795780609.png) ![shimmer_Home_Screen](Screenshot_1795780612.png)  ![Result_SearchScreen](Screenshot_1795780630.png) ![Details_screen](Screenshot_1795780646.png) ![Logout](Screenshot_1795780656.png) ![Cart_Screen](Screenshot_1795780676.png)
+![Logo_App](Screenshot_1795782399.png) ![Register](Screenshot_1795780561.png) ![Login](Screenshot_1795780565.png) ![home_Screen](Screenshot_1795780608.png) ![SplashScreen](Screenshot_1795780609.png) ![shimmer_Home_Screen](Screenshot_1795780612.png)  ![Result_SearchScreen](Screenshot_1795780630.png) ![Details_screen](Screenshot_1795780646.png) ![Logout](Screenshot_1795780656.png) ![Cart_Screen](Screenshot_1795780676.png)
 
 ---
 
