@@ -18,6 +18,10 @@ A fully functional **E-Commerce mobile application** built with **Flutter**, fea
 - 🔍 **Product Details** — Detailed view for each product
 - 🛒 **Shopping Cart** — Add/remove items and view total price
 - 👤 **User Profile** — View and manage account info
+- 🎨 **Smooth Animations** — Staggered animations & Lottie files
+- ⚡ **Shimmer Loading** — Beautiful loading placeholders
+- 🔒 **Secure Storage** — Auth tokens stored securely
+- 🧭 **Clean Navigation** — Powered by GoRouter
 
 ---
 
@@ -27,10 +31,16 @@ A fully functional **E-Commerce mobile application** built with **Flutter**, fea
 |---|---|
 | **Flutter** | UI Framework |
 | **Dart** | Programming Language |
-| **Cubit (Bloc)** | State Management |
-| **REST API** | Fetching Products Data |
-| **HTTP Package** | API Calls |
-| **Flutter Bloc** | Cubit Integration |
+| **Cubit (flutter_bloc)** | State Management |
+| **Dio** | HTTP Client & API Calls |
+| **GoRouter** | Navigation & Routing |
+| **GetIt** | Dependency Injection |
+| **Dartz** | Functional Programming (Either) |
+| **flutter_secure_storage** | Secure Token Storage |
+| **cached_network_image** | Image Caching |
+| **Shimmer** | Loading Skeleton UI |
+| **Lottie** | Animations |
+| **flutter_screenutil** | Responsive UI |
 
 ---
 
@@ -39,8 +49,9 @@ A fully functional **E-Commerce mobile application** built with **Flutter**, fea
 ```
 lib/
 ├── core/
-│   ├── api/          # API service & endpoints
-│   └── utils/        # Helper functions
+│   ├── api/          # Dio client & endpoints
+│   ├── di/           # GetIt dependency injection
+│   └── utils/        # Helper functions & constants
 ├── features/
 │   ├── auth/         # Login & Register screens + Cubit
 │   ├── home/         # Home screen + Cubit
@@ -79,16 +90,29 @@ flutter run
 
 ```yaml
 dependencies:
-  flutter_bloc: ^8.1.3
-  http: ^1.1.0
-  cached_network_image: ^3.3.0
+  flutter_screenutil: ^5.9.3
+  go_router: ^14.6.2
+  pretty_dio_logger: ^1.4.0
+  flutter_bloc: ^9.0.0
+  dio: ^5.7.0
+  cached_network_image: ^4.0.6
+  lottie: ^3.8.2
+  dartz: ^0.10.1
+  animated_snack_bar: ^0.4.0
+  get_it: ^9.3.0
+  flutter_secure_storage: ^11.2.0
+  flutter_staggered_animations: ^1.1.1
+  go_transitions: ^0.8.4
+  shimmer: ^4.0.0
+  material_ui: ^1.11.1
+  shared_preferences: ^2.5.6
 ```
 
 ---
 
 ## 🔗 API
 
-This app fetches product data from a public REST API. Products are displayed dynamically with real-time data loading and error handling.
+This app fetches product data from a public REST API. Products are displayed dynamically with real-time data loading and error handling using **Dio** with **pretty_dio_logger** for debugging.
 
 ---
 
